@@ -90,7 +90,7 @@ function askForInput() {
     if (starsPlaced >= 5) {
         console.log("\n🎉 All 5 stars placed successfully!\n");                 // console.table(starGrid); // Final star grid table
         rl.close();                                                          // close Input 
-        return;
+        return console.table(starGrid);
     }
 
     rl.question(`Enter row (0-4) and col (0-4) to place star (e.g. 2 3): `, (input) => {
