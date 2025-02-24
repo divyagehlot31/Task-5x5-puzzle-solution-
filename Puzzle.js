@@ -1,3 +1,5 @@
+//static grid and region for 5x5 grid
+
 const readline = require('readline'); // for user input use readline module import 
 
 // Readline interface create kiya jo input lega terminal se
