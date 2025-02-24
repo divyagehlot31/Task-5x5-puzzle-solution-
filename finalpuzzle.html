@@ -2,223 +2,195 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⭐ Star Grid Placement</title>
-    <style>body {
+    <title>⭐ Star Grid with Regions ⭐</title>
+<style>
+    body {
         text-align: center;
         font-family: Arial, sans-serif;
         background-color: #f4f4f4;
-        margin: 0;
-        padding: 20px;
     }
     
-    h1 {
-        color: #333;
-    }
-    
-    #input-container {
-        margin-bottom: 20px;
-    }
-    
+   
     #grid-container {
         display: inline-block;
         margin-top: 20px;
     }
     
-    .grid-row {
-        display: flex;
-    }
-    
-    .grid-cell {
+  
+    .cell {
         width: 40px;
         height: 40px;
         border: 1px solid #999;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 24px;
+        display: inline-block;
+        text-align: center;
+        vertical-align: middle;
+        font-size: 20px;
+        line-height: 40px;
         cursor: pointer;
-        background-color: #fff;
     }
     
-    .grid-cell:hover {
-        background-color: #e0e0e0;
-    }
-    
+   
     .star {
         color: gold;
     }
     
+   
     #message {
-        margin-top: 20px;
+        margin-top: 15px;
         font-weight: bold;
-        font-size: 16px;
     }
-    
-    button {
-        padding: 8px 12px;
-        margin-top: 10px;
-        cursor: pointer;
-        border: none;
-        background-color: #4CAF50;
-        color: white;
-        border-radius: 4px;
-    }
-    
-    button:hover {
-        background-color: #45a049;
-    }
-    
-    .invalid {
-        color: red;
-    }
-    
-    .valid {
-        color: green;
-    }
-    
-    
-    </style>
+   
+    .region-1 { background-color: #ffcccc; }
+    .region-2 { background-color: #ccffcc; }
+    .region-3 { background-color: #ccccff; }
+    .region-4 { background-color: #ffcc99; }
+    .region-5 { background-color: #cc99ff; }
+    .region-6 { background-color: #99ffcc; }
+    .region-7 { background-color: #ff99cc; }
+    .region-8 { background-color: #99ccff; }
+    .region-9 { background-color: #ffffcc; }</style>
 </head>
 <body>
-    <h1>⭐ Star Placement Grid ⭐</h1>
+    <h1>⭐ Star Grid with Regions ⭐</h1>
 
     <div id="input-container">
-        <label for="grid-size">Enter Grid Size (1-9): </label>
-        <input type="number" id="grid-size" min="1" max="9" placeholder="Grid Size">
-        <button onclick="createGrid()">Generate Grid</button>
+        <label for="grid-size">Enter Grid Size (N x N): </label>
+        <input type="number" id="grid-size" min="1" max="9" placeholder="Enter Grid Size">
+        <button onclick="generateGrid()">Generate Grid</button>
     </div>
-
-    <div id="message"></div>
 
     <div id="grid-container"></div>
 
-    <button id="validate-btn" onclick="validateSolution()" style="display:none;">Validate Solution</button>
+    <div id="message"></div>
 
-    <script >let gridSize = 0;
+    <script>let gridSize;
         let starGrid = [];
+        let regionGrid = [];
+        let regionColors = ["region-1", "region-2", "region-3", "region-4", "region-5", "region-6", "region-7", "region-8", "region-9"];
         
-        function createGrid() {
-            gridSize = parseInt(document.getElementById('grid-size').value);
-            const gridContainer = document.getElementById('grid-container');
-            const messageDiv = document.getElementById('message');
-            gridContainer.innerHTML = '';
-            messageDiv.innerText = '';
-        
+        function generateGrid() {
+            gridSize = parseInt(document.getElementById("grid-size").value);
             if (isNaN(gridSize) || gridSize <= 0 || gridSize > 9) {
-                messageDiv.innerText = "❌ Please enter a valid grid size (1-9)!";
-                messageDiv.className = "invalid";
+                alert("Enter a valid grid size (1-9)");
                 return;
             }
         
             starGrid = Array.from({ length: gridSize }, () => Array(gridSize).fill(' '));
+            regionGrid = createRegions(gridSize);
+            displayGrid();
+        }
+        
+        function createRegions(size) {
+            let grid = Array.from({ length: size }, () => Array(size).fill(-1));
+            let regionId = 0;
+        
+            function isValidCell(x, y) {
+                return x >= 0 && x < size && y >= 0 && y < size && grid[x][y] === -1;
+            }
+        
+            function dfs(x, y, regionId, remaining) {
+                if (remaining <= 0) return remaining;
+        
+                grid[x][y] = regionId;
+                remaining--;
+        
+                let directions = [[0,1], [1,0], [0,-1], [-1,0]];
+                directions.sort(() => Math.random() - 0.5);
+        
+                for (let [dx, dy] of directions) {
+                    let nx = x + dx;
+                    let ny = y + dy;
+                    if (isValidCell(nx, ny)) {
+                        remaining = dfs(nx, ny, regionId, remaining);
+                    }
+                }
+                return remaining;
+            }
+        
+            let cellsPerRegion = Math.floor(size * size / size);
+            let extraCells = (size * size) % size;
+        
+            for (let r = 0; r < size; r++) {
+                let remaining = cellsPerRegion + (extraCells > 0 ? 1 : 0);
+                extraCells--;
+        
+                let placed = false;
+                while (!placed) {
+                    let x = Math.floor(Math.random() * size);
+                    let y = Math.floor(Math.random() * size);
+                    if (grid[x][y] === -1) {
+                        dfs(x, y, r, remaining);
+                        placed = true;
+                    }
+                }
+            }
+        
+            return grid;
+        }
+        
+        function displayGrid() {
+            const container = document.getElementById("grid-container");
+            container.innerHTML = "";
         
             for (let i = 0; i < gridSize; i++) {
-                const rowDiv = document.createElement('div');
-                rowDiv.classList.add('grid-row');
-        
+                const rowDiv = document.createElement("div");
                 for (let j = 0; j < gridSize; j++) {
-                    const cell = document.createElement('div');
-                    cell.classList.add('grid-cell');
+                    const cell = document.createElement("div");
+                    cell.classList.add("cell", regionColors[regionGrid[i][j]]);
                     cell.dataset.row = i;
                     cell.dataset.col = j;
-                    cell.addEventListener('click', handleCellClick);
+                    cell.onclick = () => placeStar(i, j);
+        
+                    if (starGrid[i][j] === '*') {
+                        cell.textContent = '⭐';
+                        cell.classList.add("star");
+                    }
+        
                     rowDiv.appendChild(cell);
                 }
-        
-                gridContainer.appendChild(rowDiv);
+                container.appendChild(rowDiv);
             }
-        
-            document.getElementById('validate-btn').style.display = 'inline-block';
         }
         
-        function handleCellClick(event) {
-            const row = parseInt(event.target.dataset.row);
-            const col = parseInt(event.target.dataset.col);
-            const messageDiv = document.getElementById('message');
-            messageDiv.innerText = '';
+        function placeStar(row, col) {
+            const message = document.getElementById("message");
+            message.textContent = "";
         
             if (starGrid[row][col] === '*') {
-                // Remove star on second click
                 starGrid[row][col] = ' ';
-                event.target.innerText = '';
             } else {
-                if (!canPlace(row, col) || !isSafe(row, col)) {
-                    messageDiv.innerText = '❌ Cannot place star here!';
-                    messageDiv.className = 'invalid';
+                if (!canPlaceStar(row, col)) {
+                    message.textContent = "❌ Invalid Placement!";
+                    message.style.color = "red";
                     return;
                 }
-        
                 starGrid[row][col] = '*';
-                event.target.innerText = '⭐';
-                event.target.classList.add('star');
             }
+            displayGrid();
         }
         
-        function canPlace(row, col) {
+        function canPlaceStar(row, col) {
+            let regionId = regionGrid[row][col];
+        
+            // Same row, column, or adjacent cell check
             for (let i = 0; i < gridSize; i++) {
-                if (starGrid[row][i] === '*' || starGrid[i][col] === '*') {
-                    return false; // Same row or column check
-                }
+                if (starGrid[row][i] === '*' || starGrid[i][col] === '*') return false;
             }
-            return true;
-        }
         
-        function isSafe(row, col) {
-            const directions = [
-                [-1, -1], [-1, 0], [-1, 1],
-                [0, -1],          [0, 1],
-                [1, -1],  [1, 0], [1, 1]
-            ];
-        
+            let directions = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0,1], [1,-1], [1,0], [1,1]];
             for (let [dx, dy] of directions) {
-                const newRow = row + dx;
-                const newCol = col + dy;
-        
-                if (
-                    newRow >= 0 && newRow < gridSize &&
-                    newCol >= 0 && newCol < gridSize &&
-                    starGrid[newRow][newCol] === '*'
-                ) {
-                    return false; // Adjacent star found
-                }
+                let nx = row + dx, ny = col + dy;
+                if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize && starGrid[nx][ny] === '*') return false;
             }
-            return true;
-        }
         
-        function validateSolution() {
-            const messageDiv = document.getElementById('message');
-        
-            let valid = true;
-            let starCount = 0;
-        
+            // Check if another star exists in the same region
             for (let i = 0; i < gridSize; i++) {
-                let rowStars = 0;
-                let colStars = 0;
-        
                 for (let j = 0; j < gridSize; j++) {
-                    if (starGrid[i][j] === '*') rowStars++;
-                    if (starGrid[j][i] === '*') colStars++;
+                    if (regionGrid[i][j] === regionId && starGrid[i][j] === '*') return false;
                 }
-        
-                if (rowStars > 1 || colStars > 1) {
-                    valid = false;
-                    break;
-                }
-        
-                starCount += rowStars;
             }
         
-            if (starCount !== gridSize) valid = false;
-        
-            if (valid) {
-                messageDiv.innerText = "🎉 This is a VALID solution!";
-                messageDiv.className = 'valid';
-            } else {
-                messageDiv.innerText = "❌ This is NOT a valid solution!";
-                messageDiv.className = 'invalid';
-            }
-        }
-        </script>
+            return true;
+        }</script>
 </body>
 </html>
